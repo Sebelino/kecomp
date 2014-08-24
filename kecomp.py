@@ -91,9 +91,9 @@ if __name__ == '__main__':
                 if not state['pressed']:
                     state['pressed'] = True
                     win32api.mouse_event(v,tempx,tempy,0,0)
-                    print("Pressar")
+                    print("Pressed")
             else:
                 if state['pressed']:
                     state['pressed'] = False
                     win32api.mouse_event(inverse(v),tempx,tempy,0,0)
-                    print("Slutade pressa")
+                    print("Released")

@@ -7,19 +7,16 @@ To configure, edit the ``config`` variable in the beginning of the source file f
 
 Currently only for MS Windows.
 
-Dependencies
-======
+## Dependencies
 * Python 3
 * pywin32
 
-Usage
-======
+## Usage
 ```
 python kecomp.py
 ```
 
-Example configuration
-======
+## Example configuration
 ```
 config = """
 steer <Up>    0 -1

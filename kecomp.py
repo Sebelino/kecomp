@@ -9,6 +9,12 @@ import os.path
 import argparse
 
 
+def readconfig(path):
+    with open(path, 'r') as f:
+        contents = f.read()
+        return contents
+
+
 def defaultconfig():
     """
     If there is a kecomp.conf in the user's working directory, use it.
@@ -36,11 +42,8 @@ def defaultconfig():
                                              filename))
         if not os.path.exists(path):
             return fallback
-    with open(path, 'r') as f:
-        contents = f.read()
-        return contents
-
-config = defaultconfig()
+    contents = readconfig(path)
+    return contents
 
 
 def adaptsym(sym):
@@ -136,7 +139,8 @@ class KeyListener(PyKeyboardEvent):
         elif key in self.pressedkeys and action == Action.release:
             self.pressedkeys.remove(key)
 
-def run():
+
+def run(config=defaultconfig()):
     conf = parseconfig(config)
     e = KeyListener()
     t = Thread(target=e.run)
@@ -181,6 +185,11 @@ def run():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="KEyboard COntrolled Mouse Pointer.")
+    parser.add_argument('-c', '--config', help="Path to configuration file.")
     args = parser.parse_args()
 
-    run()
+    if args.config:
+        config = readconfig(args.config)
+        run(config)
+    else:
+        run()

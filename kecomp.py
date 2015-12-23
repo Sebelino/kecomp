@@ -8,6 +8,7 @@ steer <Right> 1  0
 speed X 2
 speed C 5
 map Z <LeftMouse>
+refreshrate 3
 """
 
 from pprint import pprint
@@ -47,6 +48,9 @@ def parseconfig(config):
         elif tokens[0] == 'map':
             (fromkey, tokey) = tokens[1:]
             conf['map'][adaptkeysym(fromkey)] = adaptkeysym(tokey)
+        elif tokens[0] == 'refreshrate':
+            ratemilliseconds = tokens[1]
+            conf['refreshrate'] = float(ratemilliseconds)/1000
     return conf
 
 Action = Enum('Action', 'press release init')
@@ -109,4 +113,4 @@ if __name__ == '__main__':
             if pressedkey in conf['speed']:
                 speed = speed*conf['speed'][pressedkey]
         m.move(round(x+speed*dx), round(y+speed*dy))
-        sleep(0.01)
+        sleep(conf['refreshrate'])

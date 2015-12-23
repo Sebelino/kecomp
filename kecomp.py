@@ -11,6 +11,36 @@ map Z <LeftMouse>
 """
 
 from pprint import pprint
+from pykeyboard import PyKeyboardEvent
+from enum import Enum
+
+
+class KeyListener(PyKeyboardEvent):
+    Action = Enum('Action', 'press release init')
+
+    def __init__(self):
+        PyKeyboardEvent.__init__(self)
+        self.callno = 0
+        self.action = self.Action.init
+        self.key = None
+
+    def handler(self, reply):
+        self.callno = self.callno + 1
+        r = reply._data['data']
+        if not r:
+            return
+        actioncode = r[0]
+        if actioncode == 2:
+            self.action = self.Action.press
+        elif actioncode == 3:
+            self.action = self.Action.release
+        else:
+            raise("Unknown action code: %d" % actioncode)
+        continuouscode = r[2]
+        if continuouscode not in {0, 1}:
+            raise("Unknown continuous code: %d" % continuouscode)
+        keycode = r[1]
+        self.key = self.lookup_char_from_keycode(keycode)
 
 
 def parseconfig(config):
@@ -33,3 +63,6 @@ if __name__ == '__main__':
 
     print("Configuration:")
     pprint(conf)
+
+    e = KeyListener()
+    e.run()

@@ -17,6 +17,38 @@ from enum import Enum
 from threading import Thread
 from time import sleep
 
+
+def adaptkeysym(keysym):
+    """ Translate Vim key sym notation into PyUserInput notation. """
+    keys = {
+        "<Up>": "Up",
+        "<Right>": "Right",
+        "<Down>": "Down",
+        "<Left>": "Left",
+    }
+    if keysym in keys:
+        return keys[keysym]
+
+    def lettermap(c):
+        return c.lower()
+    return lettermap(keysym)
+
+
+def parseconfig(config):
+    conf = {'speed': dict(), 'steer': dict(), 'map': dict()}
+    for line in config.strip().splitlines():
+        tokens = line.split()
+        if tokens[0] == 'steer':
+            (key, x, y) = tokens[1:]
+            conf['steer'][adaptkeysym(key)] = (int(x), int(y))
+        elif tokens[0] == 'speed':
+            (key, speed) = tokens[1:]
+            conf['speed'][adaptkeysym(key)] = int(speed)
+        elif tokens[0] == 'map':
+            (fromkey, tokey) = tokens[1:]
+            conf['map'][adaptkeysym(fromkey)] = adaptkeysym(tokey)
+    return conf
+
 Action = Enum('Action', 'press release init')
 
 
@@ -54,22 +86,6 @@ class KeyListener(PyKeyboardEvent):
         elif key in self.pressedkeys and action == Action.release:
             self.pressedkeys.remove(key)
 
-
-def parseconfig(config):
-    conf = {'speed': dict(), 'steer': dict(), 'map': dict()}
-    for line in config.strip().splitlines():
-        tokens = line.split()
-        if tokens[0] == 'steer':
-            (key, x, y) = tokens[1:]
-            conf['steer'][key] = (int(x), int(y))
-        elif tokens[0] == 'speed':
-            (key, speed) = tokens[1:]
-            conf['speed'][key] = int(speed)
-        elif tokens[0] == 'map':
-            (fromkey, tokey) = tokens[1:]
-            conf['map'][fromkey] = tokey
-    return conf
-
 if __name__ == '__main__':
     conf = parseconfig(config)
 
@@ -84,11 +100,10 @@ if __name__ == '__main__':
 
     while True:
         (x, y) = m.position()
-        dx = 0
-        dy = 0
-        if 'Up' in e.pressedkeys: dy = -1
-        if 'Right' in e.pressedkeys: dx = 1
-        if 'Down' in e.pressedkeys: dy = 1
-        if 'Left' in e.pressedkeys: dx = -1
+        (dx, dy) = (0, 0)
+        for pressedkey in e.pressedkeys:
+            if pressedkey in conf['steer']:
+                (ddx, ddy) = conf['steer'][pressedkey]
+                (dx, dy) = (dx+ddx, dy+ddy)
         m.move(x+dx, y+dy)
         sleep(0.01)

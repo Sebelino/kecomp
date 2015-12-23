@@ -140,46 +140,53 @@ class KeyListener(PyKeyboardEvent):
             self.pressedkeys.remove(key)
 
 
-def run(config=defaultconfig()):
-    conf = parseconfig(config)
-    e = KeyListener()
-    t = Thread(target=e.run)
-    t.start()
-    m = PyMouse()
+def update(conf, mouse, keylistener):
+    """
+    Updates the mouse pointer according to the set of currently pressed keys.
+    """
+    (x, y) = mouse.position()
+    (dx, dy) = (0, 0)
+    speed = conf['defaultspeed'] if 'defaultspeed' in conf else 1
+    leftpress = False
+    rightpress = False
+    for pressedkey in keylistener.pressedkeys:
+        if pressedkey in conf['steer']:
+            (ddx, ddy) = conf['steer'][pressedkey]
+            (dx, dy) = (dx+ddx, dy+ddy)
+        if pressedkey in conf['speed']:
+            try:
+                speed = float(conf['speed'][pressedkey])
+            except TypeError:
+                f = conf['speed'][pressedkey]
+                speed = f(speed)
+        if pressedkey in conf['map']:
+            if conf['map'][pressedkey] == '<LeftMouse>':
+                leftpress = True
+            if conf['map'][pressedkey] == '<RightMouse>':
+                rightpress = True
+    newx = round(x+speed*dx)
+    newy = round(y+speed*dy)
+    mouse.move(newx, newy)
+    if leftpress:
+        mouse.press(newx, newy, 1)
+    else:
+        # v--- May cause some unneccessary overhead. Fix?
+        mouse.release(newx, newy, 1)
+    if rightpress:
+        mouse.press(newx, newy, 2)
+    else:
+        mouse.release(newx, newy, 2)
 
+
+def run(config=defaultconfig()):
+    """ Run the program with the specified configuration. """
+    conf = parseconfig(config)
+    keylistener = KeyListener()
+    t = Thread(target=keylistener.run)
+    t.start()
+    mouse = PyMouse()
     while True:
-        (x, y) = m.position()
-        (dx, dy) = (0, 0)
-        speed = conf['defaultspeed'] if 'defaultspeed' in conf else 1
-        leftpress = False
-        rightpress = False
-        for pressedkey in e.pressedkeys:
-            if pressedkey in conf['steer']:
-                (ddx, ddy) = conf['steer'][pressedkey]
-                (dx, dy) = (dx+ddx, dy+ddy)
-            if pressedkey in conf['speed']:
-                try:
-                    speed = float(conf['speed'][pressedkey])
-                except TypeError:
-                    f = conf['speed'][pressedkey]
-                    speed = f(speed)
-            if pressedkey in conf['map']:
-                if conf['map'][pressedkey] == '<LeftMouse>':
-                    leftpress = True
-                if conf['map'][pressedkey] == '<RightMouse>':
-                    rightpress = True
-        newx = round(x+speed*dx)
-        newy = round(y+speed*dy)
-        m.move(newx, newy)
-        if leftpress:
-            m.press(newx, newy, 1)
-        else:
-            # v--- May cause some unneccessary overhead. Fix?
-            m.release(newx, newy, 1)
-        if rightpress:
-            m.press(newx, newy, 2)
-        else:
-            m.release(newx, newy, 2)
+        update(conf, mouse, keylistener)
         sleep(conf['refreshrate'])
 
 if __name__ == '__main__':

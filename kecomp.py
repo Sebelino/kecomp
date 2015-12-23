@@ -21,20 +21,20 @@ from threading import Thread
 from time import sleep
 
 
-def adaptkeysym(keysym):
-    """ Translate Vim key sym notation into PyUserInput notation. """
-    keys = {
+def adaptsym(sym):
+    """ Translate Vim sym notation into PyUserInput notation. """
+    syms = {
         "<Up>": "Up",
         "<Right>": "Right",
         "<Down>": "Down",
         "<Left>": "Left",
     }
-    if keysym in keys:
-        return keys[keysym]
+    if sym in syms:
+        return syms[sym]
 
     def lettermap(c):
         return c.lower()
-    return lettermap(keysym)
+    return lettermap(sym)
 
 
 def modifier(string):
@@ -62,13 +62,13 @@ def parseconfig(config):
         tokens = line.split()
         if tokens[0] == 'steer':
             (key, x, y) = tokens[1:]
-            conf['steer'][adaptkeysym(key)] = (int(x), int(y))
+            conf['steer'][adaptsym(key)] = (int(x), int(y))
         elif tokens[0] == 'speed':
             (key, speedstr) = tokens[1:]
-            conf['speed'][adaptkeysym(key)] = modifier(speedstr)
+            conf['speed'][adaptsym(key)] = modifier(speedstr)
         elif tokens[0] == 'map':
             (fromkey, tokey) = tokens[1:]
-            conf['map'][adaptkeysym(fromkey)] = adaptkeysym(tokey)
+            conf['map'][adaptsym(fromkey)] = tokey
         elif tokens[0] == 'refreshrate':
             ratemilliseconds = tokens[1]
             conf['refreshrate'] = float(ratemilliseconds)/1000

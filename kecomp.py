@@ -6,6 +6,7 @@ from enum import Enum
 from threading import Thread
 from time import sleep
 import os.path
+import argparse
 
 
 def defaultconfig():
@@ -135,7 +136,7 @@ class KeyListener(PyKeyboardEvent):
         elif key in self.pressedkeys and action == Action.release:
             self.pressedkeys.remove(key)
 
-if __name__ == '__main__':
+def run():
     conf = parseconfig(config)
     e = KeyListener()
     t = Thread(target=e.run)
@@ -176,3 +177,10 @@ if __name__ == '__main__':
         else:
             m.release(newx, newy, 2)
         sleep(conf['refreshrate'])
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description="KEyboard COntrolled Mouse Pointer.")
+    args = parser.parse_args()
+
+    run()

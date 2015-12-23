@@ -130,6 +130,7 @@ if __name__ == '__main__':
         (x, y) = m.position()
         (dx, dy) = (0, 0)
         speed = conf['defaultspeed'] if 'defaultspeed' in conf else 1
+        mousepress = False
         for pressedkey in e.pressedkeys:
             if pressedkey in conf['steer']:
                 (ddx, ddy) = conf['steer'][pressedkey]
@@ -140,5 +141,14 @@ if __name__ == '__main__':
                 except TypeError:
                     f = conf['speed'][pressedkey]
                     speed = f(speed)
-        m.move(round(x+speed*dx), round(y+speed*dy))
+            if pressedkey in conf['map']:
+                if conf['map'][pressedkey] == '<LeftMouse>':
+                    mousepress = True
+        newx = round(x+speed*dx)
+        newy = round(y+speed*dy)
+        m.move(newx, newy)
+        if mousepress:
+            m.press(newx, newy)
+        else:
+            m.release(newx, newy)  # May cause some unneccessary overhead. Fix?
         sleep(conf['refreshrate'])

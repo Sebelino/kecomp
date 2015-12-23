@@ -1,25 +1,45 @@
 #!/usr/bin/env python
 
-config = """
-steer <Up>    0 -1
-steer <Down>  0  1
-steer <Left> -1  0
-steer <Right> 1  0
-default speed 15
-speed B 30
-speed C /3
-speed V *0.2
-map Z <LeftMouse>
-map X <RightMouse>
-refreshrate 10
-"""
-
-from pprint import pprint
 from pykeyboard import PyKeyboardEvent
 from pymouse import PyMouse
 from enum import Enum
 from threading import Thread
 from time import sleep
+import os.path
+
+
+def defaultconfig():
+    """
+    If there is a kecomp.conf in the user's working directory, use it.
+    Else, if there is a kecomp.conf in the same directory as this file, use it.
+    Else, use the fallback configuration defined below.
+    """
+    fallback = """
+    steer <Up>    0 -1
+    steer <Down>  0  1
+    steer <Left> -1  0
+    steer <Right> 1  0
+    default speed 15
+    speed B 30
+    speed C /3
+    speed V *0.2
+    map Z <LeftMouse>
+    map X <RightMouse>
+    refreshrate 10
+    """
+    filename = "kecomp.conf"
+    path = os.path.realpath(os.path.join(os.getcwd(), filename))
+    if not os.path.exists(path):
+        path = os.path.realpath(os.path.join(os.getcwd(),
+                                             os.path.dirname(__file__),
+                                             filename))
+        if not os.path.exists(path):
+            return fallback
+    with open(path, 'r') as f:
+        contents = f.read()
+        return contents
+
+config = defaultconfig()
 
 
 def adaptsym(sym):
@@ -117,14 +137,9 @@ class KeyListener(PyKeyboardEvent):
 
 if __name__ == '__main__':
     conf = parseconfig(config)
-
-    print("Configuration:")
-    pprint(conf)
-
     e = KeyListener()
     t = Thread(target=e.run)
     t.start()
-
     m = PyMouse()
 
     while True:

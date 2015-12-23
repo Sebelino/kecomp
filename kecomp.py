@@ -5,10 +5,12 @@ steer <Up>    0 -1
 steer <Down>  0  1
 steer <Left> -1  0
 steer <Right> 1  0
-speed X 2
-speed C 5
+default speed 15
+speed V 30
+speed X /3
+speed C *0.2
 map Z <LeftMouse>
-refreshrate 3
+refreshrate 10
 """
 
 from pprint import pprint
@@ -35,6 +37,25 @@ def adaptkeysym(keysym):
     return lettermap(keysym)
 
 
+def modifier(string):
+    """ Parse a string into either a value or an operation. """
+    try:
+        speed = float(string)
+        return speed
+    except ValueError:
+        operation = string[0]
+        multiplier = float(string[1:])
+        if operation == '*':
+            def operation(speed):
+                return speed*multiplier
+        elif operation == '/':
+            def operation(speed):
+                return speed/multiplier
+        else:
+            raise("Unknown modifier string format: %s" % string)
+        return operation
+
+
 def parseconfig(config):
     conf = {'speed': dict(), 'steer': dict(), 'map': dict()}
     for line in config.strip().splitlines():
@@ -43,14 +64,17 @@ def parseconfig(config):
             (key, x, y) = tokens[1:]
             conf['steer'][adaptkeysym(key)] = (int(x), int(y))
         elif tokens[0] == 'speed':
-            (key, speed) = tokens[1:]
-            conf['speed'][adaptkeysym(key)] = float(speed)
+            (key, speedstr) = tokens[1:]
+            conf['speed'][adaptkeysym(key)] = modifier(speedstr)
         elif tokens[0] == 'map':
             (fromkey, tokey) = tokens[1:]
             conf['map'][adaptkeysym(fromkey)] = adaptkeysym(tokey)
         elif tokens[0] == 'refreshrate':
             ratemilliseconds = tokens[1]
             conf['refreshrate'] = float(ratemilliseconds)/1000
+        elif tokens[0] == 'default' and tokens[1] == 'speed':
+            defaultspeed = tokens[2]
+            conf['defaultspeed'] = int(defaultspeed)
     return conf
 
 Action = Enum('Action', 'press release init')
@@ -105,12 +129,16 @@ if __name__ == '__main__':
     while True:
         (x, y) = m.position()
         (dx, dy) = (0, 0)
-        speed = 1
+        speed = conf['defaultspeed'] if 'defaultspeed' in conf else 1
         for pressedkey in e.pressedkeys:
             if pressedkey in conf['steer']:
                 (ddx, ddy) = conf['steer'][pressedkey]
                 (dx, dy) = (dx+ddx, dy+ddy)
             if pressedkey in conf['speed']:
-                speed = speed*conf['speed'][pressedkey]
+                try:
+                    speed = float(conf['speed'][pressedkey])
+                except TypeError:
+                    f = conf['speed'][pressedkey]
+                    speed = f(speed)
         m.move(round(x+speed*dx), round(y+speed*dy))
         sleep(conf['refreshrate'])

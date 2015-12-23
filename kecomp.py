@@ -5,7 +5,7 @@ steer <Up>    0 -1
 steer <Down>  0  1
 steer <Left> -1  0
 steer <Right> 1  0
-speed X 1
+speed X 2
 speed C 5
 map Z <LeftMouse>
 """
@@ -43,7 +43,7 @@ def parseconfig(config):
             conf['steer'][adaptkeysym(key)] = (int(x), int(y))
         elif tokens[0] == 'speed':
             (key, speed) = tokens[1:]
-            conf['speed'][adaptkeysym(key)] = int(speed)
+            conf['speed'][adaptkeysym(key)] = float(speed)
         elif tokens[0] == 'map':
             (fromkey, tokey) = tokens[1:]
             conf['map'][adaptkeysym(fromkey)] = adaptkeysym(tokey)
@@ -101,9 +101,12 @@ if __name__ == '__main__':
     while True:
         (x, y) = m.position()
         (dx, dy) = (0, 0)
+        speed = 1
         for pressedkey in e.pressedkeys:
             if pressedkey in conf['steer']:
                 (ddx, ddy) = conf['steer'][pressedkey]
                 (dx, dy) = (dx+ddx, dy+ddy)
-        m.move(x+dx, y+dy)
+            if pressedkey in conf['speed']:
+                speed = speed*conf['speed'][pressedkey]
+        m.move(round(x+speed*dx), round(y+speed*dy))
         sleep(0.01)

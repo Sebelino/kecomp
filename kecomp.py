@@ -6,10 +6,11 @@ steer <Down>  0  1
 steer <Left> -1  0
 steer <Right> 1  0
 default speed 15
-speed V 30
-speed X /3
-speed C *0.2
+speed B 30
+speed C /3
+speed V *0.2
 map Z <LeftMouse>
+map X <RightMouse>
 refreshrate 10
 """
 
@@ -130,7 +131,8 @@ if __name__ == '__main__':
         (x, y) = m.position()
         (dx, dy) = (0, 0)
         speed = conf['defaultspeed'] if 'defaultspeed' in conf else 1
-        mousepress = False
+        leftpress = False
+        rightpress = False
         for pressedkey in e.pressedkeys:
             if pressedkey in conf['steer']:
                 (ddx, ddy) = conf['steer'][pressedkey]
@@ -143,12 +145,19 @@ if __name__ == '__main__':
                     speed = f(speed)
             if pressedkey in conf['map']:
                 if conf['map'][pressedkey] == '<LeftMouse>':
-                    mousepress = True
+                    leftpress = True
+                if conf['map'][pressedkey] == '<RightMouse>':
+                    rightpress = True
         newx = round(x+speed*dx)
         newy = round(y+speed*dy)
         m.move(newx, newy)
-        if mousepress:
-            m.press(newx, newy)
+        if leftpress:
+            m.press(newx, newy, 1)
         else:
-            m.release(newx, newy)  # May cause some unneccessary overhead. Fix?
+            # v--- May cause some unneccessary overhead. Fix?
+            m.release(newx, newy, 1)
+        if rightpress:
+            m.press(newx, newy, 2)
+        else:
+            m.release(newx, newy, 2)
         sleep(conf['refreshrate'])

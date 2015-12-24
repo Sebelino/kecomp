@@ -119,7 +119,7 @@ class KeyListener(PyKeyboardEvent):
     def handler(self, reply):
         self.callno = self.callno + 1
         if os.name == 'posix':
-            self.linuxhandler(reply)
+            self.x11handler(reply)
         elif os.name == 'nt':
             self.windowshandler(reply)
             return True

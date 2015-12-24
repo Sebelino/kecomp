@@ -21,6 +21,7 @@ optional arguments:
 
 ### Configuration
 The program can be configured to some extent. There are four alternatives for supplying a configuration:
+
 1. By supplying a path to your configuration file like so: ``$ python kecomp.py -c ~/.mykecomp.conf``
 2. By storing your configuration in a file named ``kecomp.conf`` in the current working directory and running the program normally: ``python kecomp.py``. Alternative 1 overrides this.
 3. By storing your configuration in a file named ``kecomp.conf`` in the same directory as ``kecomp.py`` and running the program normally: ``python kecomp.py``. Alternative 2 overrides this.

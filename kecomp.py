@@ -5,7 +5,7 @@ from pymouse import PyMouse
 from enum import Enum
 from threading import Thread
 from time import sleep
-import os.path
+import os
 import argparse
 
 
@@ -58,7 +58,12 @@ def adaptsym(sym):
         return syms[sym]
 
     def lettermap(c):
-        return c.lower()
+        if os.name == 'posix':
+            return c.lower()
+        elif os.name == 'nt':
+            return c.upper()
+        else:
+            raise("Unknown operating system.")
     return lettermap(sym)
 
 
@@ -113,6 +118,30 @@ class KeyListener(PyKeyboardEvent):
 
     def handler(self, reply):
         self.callno = self.callno + 1
+        if os.name == 'posix':
+            self.linuxhandler(reply)
+        elif os.name == 'nt':
+            self.windowshandler(reply)
+            return True
+        else:
+            raise("Unknown operating system.")
+
+    def windowshandler(self, reply):
+        if reply.IsTransition():
+            action = Action.release
+        else:
+            action = Action.press
+        key = reply.GetKey()
+        continuous = action == Action.press and key in self.pressedkeys
+        if continuous:
+            return  # We are not concerned with these kinds of events
+        self.pressedkeys.add(key)
+        if key not in self.pressedkeys and action == Action.press:
+            self.pressedkeys.add(key)
+        elif key in self.pressedkeys and action == Action.release:
+            self.pressedkeys.remove(key)
+
+    def x11handler(self, reply):
         r = reply._data['data']
         if not r:
             return
@@ -138,6 +167,27 @@ class KeyListener(PyKeyboardEvent):
             self.pressedkeys.add(key)
         elif key in self.pressedkeys and action == Action.release:
             self.pressedkeys.remove(key)
+
+
+class Mouse(PyMouse):
+    def __init__(self):
+        PyMouse.__init__(self)
+        self.leftmousepressed = False
+        self.rightmousepressed = False
+
+    def press(self, x, y, button=1):
+        PyMouse.press(self, x, y, button)
+        if button == 1:
+            self.leftmousepressed = True
+        elif button == 2:
+            self.rightmousepressed = True
+
+    def release(self, x, y, button=1):
+        PyMouse.release(self, x, y, button)
+        if button == 1:
+            self.leftmousepressed = False
+        elif button == 2:
+            self.rightmousepressed = False
 
 
 def update(conf, mouse, keylistener):
@@ -167,15 +217,14 @@ def update(conf, mouse, keylistener):
     newx = round(x+speed*dx)
     newy = round(y+speed*dy)
     mouse.move(newx, newy)
-    if leftpress:
+    if leftpress and not mouse.leftmousepressed:
         mouse.press(newx, newy, 1)
-    else:
-        # v--- May cause some unneccessary overhead. Fix?
+    elif not leftpress and mouse.leftmousepressed:
         mouse.release(newx, newy, 1)
-    if rightpress:
+    if rightpress and not mouse.rightmousepressed:
         mouse.press(newx, newy, 2)
-    else:
-        mouse.release(newx, newy, 2)
+    elif not rightpress and mouse.rightmousepressed:
+            mouse.release(newx, newy, 2)
 
 
 def run(config=defaultconfig()):
@@ -184,7 +233,7 @@ def run(config=defaultconfig()):
     keylistener = KeyListener()
     t = Thread(target=keylistener.run)
     t.start()
-    mouse = PyMouse()
+    mouse = Mouse()
     while True:
         update(conf, mouse, keylistener)
         sleep(conf['refreshrate'])

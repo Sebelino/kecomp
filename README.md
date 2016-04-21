@@ -1,11 +1,11 @@
 KEyboard-COntrolled Mouse Pointer
 ======
 
-Allows you to control the mouse pointer with your keyboard. Supported on Linux and Windows.
+Allows you to control the mouse pointer with your keyboard. Currently supported on Linux and Windows.
 
 ## Dependencies
 * Python 3
-* [PyUserInput](https://github.com/SavinaRoja/PyUserInput) (see if the latest commit works, otherwise try commit d45f45ffbb2399d964eb515c887c493a1837c09d)
+ * [PyUserInput](https://github.com/PyUserInput/PyUserInput) (see if the latest commit works, otherwise try commit [e3442ac](https://github.com/PyUserInput/PyUserInput/commit/e3442ac1538a78859a31850165b0cf28048f587f))
 
 ## Usage
 ```
